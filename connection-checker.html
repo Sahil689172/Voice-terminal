@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backend Connection Checker</title>
+    <style>
+        /* Basic styling for the connection checker interface */
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+        }
+        
+        /* Style for the Check Connection button */
+        .check-button {
+            background-color: #007bff;
+            color: white;
+            padding: 15px 30px;
+            font-size: 18px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-bottom: 20px;
+        }
+        
+        .check-button:hover {
+            background-color: #0056b3;
+        }
+        
+        .check-button:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+        
+        /* Status display area */
+        .status-display {
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Success status (green) */
+        .status-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 2px solid #c3e6cb;
+        }
+        
+        /* Error status (red) */
+        .status-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 2px solid #f5c6cb;
+        }
+        
+        /* Default/loading status */
+        .status-default {
+            background-color: #e2e3e5;
+            color: #383d41;
+            border: 2px solid #d6d8db;
+        }
+        
+        /* Server info display */
+        .server-info {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            text-align: left;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        
+        /* Console output area */
+        .console-output {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f8f8;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            text-align: left;
+            font-family: monospace;
+            font-size: 14px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Backend Connection Checker</h1>
+        
+        <!-- Check Connection button -->
+        <button id="checkButton" class="check-button">Check Connection</button>
+        
+        <!-- Status display area -->
+        <div id="statusDisplay" class="status-display status-default">
+            Click "Check Connection" to test backend connectivity
+        </div>
+        
+        <!-- Server information -->
+        <div class="server-info">
+            <strong>Target Server:</strong> https://insertional-hypercarnally-allan.ngrok-free.dev/<br>
+            <strong>Method:</strong> GET request<br>
+            <strong>Purpose:</strong> Verify backend server is running and accessible
+        </div>
+        
+        <!-- Console output area for debugging -->
+        <div class="console-output">
+            <strong>Console Output:</strong><br>
+            <div id="consoleLog"></div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration: Backend server URL to check (now using ngrok)
+        const BACKEND_URL = 'https://insertional-hypercarnally-allan.ngrok-free.dev/';
+        
+        // DOM elements
+        const checkButton = document.getElementById('checkButton');
+        const statusDisplay = document.getElementById('statusDisplay');
+        const consoleLogDiv = document.getElementById('consoleLog');
+        
+        /**
+         * Log messages to the console output area and browser console
+         * @param {string} message - The message to log
+         * @param {string} type - The type of log (info, success, error)
+         */
+        function logToConsole(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            
+            // Add color coding based on log type
+            let color = '#333';
+            if (type === 'success') color = '#28a745';
+            if (type === 'error') color = '#dc3545';
+            
+            logEntry.innerHTML = `<span style="color: ${color}">[${timestamp}] ${message}</span>`;
+            consoleLogDiv.appendChild(logEntry);
+            
+            // Auto-scroll to the bottom
+            consoleLogDiv.scrollTop = consoleLogDiv.scrollHeight;
+            
+            // Also log to browser console for debugging
+            console.log(`Connection Checker: ${message}`);
+        }
+        
+        /**
+         * Update the status display with connection result
+         * @param {boolean} isConnected - Whether the backend is connected
+         * @param {string} message - Additional message to display
+         * @param {Object} responseData - Response data from server (if successful)
+         */
+        function updateStatus(isConnected, message = '', responseData = null) {
+            if (isConnected) {
+                // Success: Backend is connected
+                statusDisplay.className = 'status-display status-success';
+                statusDisplay.innerHTML = '✅ Backend Connected';
+                
+                if (message) {
+                    statusDisplay.innerHTML += `<br><small>${message}</small>`;
+                }
+                
+                logToConsole('✅ Backend connection successful!', 'success');
+                if (responseData) {
+                    logToConsole(`Response data: ${JSON.stringify(responseData)}`, 'info');
+                }
+                
+            } else {
+                // Error: Backend is not connected
+                statusDisplay.className = 'status-display status-error';
+                statusDisplay.innerHTML = '❌ Not Connected';
+                
+                if (message) {
+                    statusDisplay.innerHTML += `<br><small>${message}</small>`;
+                }
+                
+                logToConsole('❌ Backend connection failed!', 'error');
+                if (message) {
+                    logToConsole(`Error details: ${message}`, 'error');
+                }
+            }
+        }
+        
+        /**
+         * Test the connection to the backend server
+         * This function sends a GET request to check if the server is running
+         */
+        async function checkBackendConnection() {
+            try {
+                // Update UI to show checking status
+                checkButton.disabled = true;
+                checkButton.textContent = 'Checking...';
+                statusDisplay.className = 'status-display status-default';
+                statusDisplay.innerHTML = '🔄 Checking connection...';
+                
+                logToConsole(`Attempting to connect to: ${BACKEND_URL}`);
+                logToConsole('Sending GET request to backend server...');
+                
+                // Send GET request to the backend server
+                const response = await fetch(BACKEND_URL, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                    },
+                    // Add timeout to prevent hanging requests
+                    signal: AbortSignal.timeout(5000) // 5 second timeout
+                });
+                
+                // Check if the response is successful (status 200-299)
+                if (response.ok) {
+                    logToConsole(`HTTP Status: ${response.status} ${response.statusText}`, 'success');
+                    
+                    // Try to parse response as JSON, fallback to text
+                    let responseData;
+                    const contentType = response.headers.get('content-type');
+                    
+                    if (contentType && contentType.includes('application/json')) {
+                        responseData = await response.json();
+                        logToConsole('Response received as JSON', 'info');
+                    } else {
+                        const responseText = await response.text();
+                        responseData = { message: responseText };
+                        logToConsole('Response received as text', 'info');
+                    }
+                    
+                    // Update status to show successful connection
+                    updateStatus(true, `Server responded with status ${response.status}`, responseData);
+                    
+                } else {
+                    // Server responded but with an error status
+                    const errorText = await response.text();
+                    logToConsole(`Server responded with error status: ${response.status}`, 'error');
+                    updateStatus(false, `Server error: ${response.status} - ${errorText}`);
+                }
+                
+            } catch (error) {
+                // Handle network errors, timeouts, or other exceptions
+                let errorMessage = 'Unknown error occurred';
+                
+                if (error.name === 'AbortError') {
+                    errorMessage = 'Connection timeout (5 seconds)';
+                    logToConsole('Request timed out after 5 seconds', 'error');
+                } else if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                    errorMessage = 'Network error - server may be down';
+                    logToConsole('Network error - unable to reach server', 'error');
+                } else {
+                    errorMessage = error.message;
+                    logToConsole(`Connection error: ${error.message}`, 'error');
+                }
+                
+                updateStatus(false, errorMessage);
+            } finally {
+                // Re-enable the button regardless of success or failure
+                checkButton.disabled = false;
+                checkButton.textContent = 'Check Connection';
+            }
+        }
+        
+        /**
+         * Initialize the application when the page loads
+         */
+        document.addEventListener('DOMContentLoaded', function() {
+            logToConsole('Backend Connection Checker initialized');
+            logToConsole(`Target server: ${BACKEND_URL}`);
+            
+            // Add click event listener to the Check Connection button
+            checkButton.addEventListener('click', checkBackendConnection);
+            
+            // Optional: Auto-check connection on page load
+            // Uncomment the line below if you want to automatically check on page load
+            // checkBackendConnection();
+        });
+    </script>
+</body>
+</html>
